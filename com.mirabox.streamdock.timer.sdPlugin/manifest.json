@@ -1,0 +1,72 @@
+{
+  "Actions": [
+    {
+      "Icon": "static/icon.png",
+      "Name": "Таймер",
+      "DisableAutomaticStates": true,
+      "States": [
+        {
+          "Image": "static/idle.png",
+          "TitleAlignment": "middle",
+          "FontSize": "14",
+          "FontStyle": "Bold",
+          "Title": "05:00\nПУСК"
+        },
+        {
+          "Image": "static/running.png",
+          "TitleAlignment": "middle",
+          "FontSize": "14",
+          "FontStyle": "Bold",
+          "Title": ""
+        },
+        {
+          "Image": "static/paused.png",
+          "TitleAlignment": "middle",
+          "FontSize": "14",
+          "FontStyle": "Bold",
+          "Title": ""
+        },
+        {
+          "Image": "static/alarm.png",
+          "TitleAlignment": "middle",
+          "FontSize": "14",
+          "FontStyle": "Bold",
+          "Title": ""
+        }
+      ],
+      "Settings": {
+        "durationSec": 300,
+        "stepSec": 60,
+        "soundEnabled": true
+      },
+      "Controllers": ["Knob"],
+      "UserTitleEnabled": false,
+      "SupportedInMultiActions": false,
+      "Tooltip": "Щелчок — старт и пауза, три быстрых щелчка — сброс, поворот — время",
+      "UUID": "com.mirabox.streamdock.timer.knob",
+      "PropertyInspectorPath": "propertyInspector/timer/index.html"
+    }
+  ],
+  "SDKVersion": 1,
+  "Author": "Custom",
+  "Name": "Таймер",
+  "Icon": "static/icon.png",
+  "CodePath": "plugin/index.js",
+  "CodePathWin": "plugin/index.js",
+  "Description": "Таймер на крутилке: щелчок запускает и ставит на паузу, три быстрых щелчка сбрасывают, поворот задаёт время",
+  "Category": "Таймер",
+  "CategoryIcon": "static/icon.png",
+  "Version": "1.0.0",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "3.10.188.226"
+  },
+  "Nodejs": {
+    "Version": "20"
+  }
+}

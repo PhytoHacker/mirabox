@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Таймер</title>
+  <link rel="stylesheet" href="../../static/css/sdpi.css">
+</head>
+<body>
+  <div class="sdpi-wrapper" style="display:none">
+    <div class="sdpi-item">
+      <details class="message" open>
+        <summary>Как пользоваться</summary>
+        <p>Щелчок крутилки запускает таймер и ставит его на паузу. Сброс к заданному времени — три быстрых щелчка. Удержание крутилка не отличает от обычного щелчка.</p>
+        <p>Поворот задаёт время, пока отсчёт не идёт, и это время сохраняется. Быстрый поворот меняет его крупнее.</p>
+      </details>
+    </div>
+    <div type="select" class="sdpi-item">
+      <div class="sdpi-item-label">Шаг крутилки</div>
+      <select class="sdpi-item-value" id="stepSec">
+        <option value="5">5 секунд</option>
+        <option value="15">15 секунд</option>
+        <option value="30">30 секунд</option>
+        <option value="60">1 минута</option>
+        <option value="300">5 минут</option>
+      </select>
+    </div>
+    <div type="checkbox" class="sdpi-item">
+      <div class="sdpi-item-label">Сигнал</div>
+      <div class="sdpi-item-value">
+        <input id="soundEnabled" type="checkbox">
+        <label for="soundEnabled" class="sdpi-item-label"><span></span>Звук по окончании</label>
+      </div>
+    </div>
+  </div>
+  <script src="../utils/common.js"></script>
+  <script src="../utils/action.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

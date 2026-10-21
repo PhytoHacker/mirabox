@@ -1,0 +1,10 @@
+{
+  "Name": "计时器",
+  "Description": "旋钮计时器：单击开始或暂停，快速按三次重置，旋转设定时间",
+  "com.mirabox.streamdock.timer.knob": {
+    "Name": "计时器",
+    "Tooltip": "单击开始和暂停，快速按三次重置，旋转设定时间"
+  },
+  "Category": "计时器",
+  "Localization": {}
+}
