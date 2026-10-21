@@ -1,0 +1,153 @@
+{
+  "Actions": [
+    {
+      "Icon": "static/connect.png",
+      "Name": "Включить",
+      "States": [
+        {
+          "Image": "static/connect.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "12",
+          "FontStyle": "Bold",
+          "Title": "ВКЛ"
+        }
+      ],
+      "Controllers": ["Keypad", "Knob"],
+      "UserTitleEnabled": true,
+      "SupportedInMultiActions": true,
+      "Tooltip": "Включает сервер, который сейчас выбран в Happ",
+      "UUID": "com.mirabox.streamdock.happ.connect",
+      "PropertyInspectorPath": "propertyInspector/happ/index.html"
+    },
+    {
+      "Icon": "static/disconnect.png",
+      "Name": "Выключить",
+      "States": [
+        {
+          "Image": "static/disconnect.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "12",
+          "FontStyle": "Bold",
+          "Title": "ВЫКЛ"
+        }
+      ],
+      "Controllers": ["Keypad", "Knob"],
+      "UserTitleEnabled": true,
+      "SupportedInMultiActions": true,
+      "Tooltip": "Отключает Happ",
+      "UUID": "com.mirabox.streamdock.happ.disconnect",
+      "PropertyInspectorPath": "propertyInspector/happ/index.html"
+    },
+    {
+      "Icon": "static/toggle.png",
+      "Name": "Переключить",
+      "DisableAutomaticStates": true,
+      "States": [
+        {
+          "Image": "static/toggle-off.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "12",
+          "FontStyle": "Bold",
+          "Title": "ВЫКЛ"
+        },
+        {
+          "Image": "static/toggle-on.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "12",
+          "FontStyle": "Bold",
+          "Title": "ВКЛ"
+        }
+      ],
+      "Controllers": ["Keypad", "Knob"],
+      "UserTitleEnabled": false,
+      "SupportedInMultiActions": true,
+      "Settings": {
+        "showCaption": true,
+        "colorOn": "#ffffff",
+        "colorOff": "#4e4e4e"
+      },
+      "Tooltip": "Включает или выключает выбранный сервер. На клавише видно, поднят ли туннель",
+      "UUID": "com.mirabox.streamdock.happ.toggle",
+      "PropertyInspectorPath": "propertyInspector/happ/index.html"
+    },
+    {
+      "Icon": "static/open.png",
+      "Name": "Открыть окно",
+      "States": [
+        {
+          "Image": "static/open.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "12",
+          "FontStyle": "Bold",
+          "Title": "ОКНО"
+        }
+      ],
+      "Controllers": ["Keypad", "Knob"],
+      "UserTitleEnabled": true,
+      "SupportedInMultiActions": true,
+      "Tooltip": "Открывает окно Happ",
+      "UUID": "com.mirabox.streamdock.happ.open",
+      "PropertyInspectorPath": "propertyInspector/happ/index.html"
+    },
+    {
+      "Icon": "static/close.png",
+      "Name": "Закрыть окно",
+      "States": [
+        {
+          "Image": "static/close.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "11",
+          "FontStyle": "Bold",
+          "Title": "СКРЫТЬ"
+        }
+      ],
+      "Controllers": ["Keypad", "Knob"],
+      "UserTitleEnabled": true,
+      "SupportedInMultiActions": true,
+      "Tooltip": "Прячет окно Happ",
+      "UUID": "com.mirabox.streamdock.happ.close",
+      "PropertyInspectorPath": "propertyInspector/happ/index.html"
+    },
+    {
+      "Icon": "static/routing.png",
+      "Name": "Маршруты выкл",
+      "States": [
+        {
+          "Image": "static/routing.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "11",
+          "FontStyle": "Bold",
+          "Title": "МАРШР"
+        }
+      ],
+      "Controllers": ["Keypad", "Knob"],
+      "UserTitleEnabled": true,
+      "SupportedInMultiActions": true,
+      "Tooltip": "Выключает правила маршрутизации Happ",
+      "UUID": "com.mirabox.streamdock.happ.routing",
+      "PropertyInspectorPath": "propertyInspector/happ/index.html"
+    }
+  ],
+  "SDKVersion": 1,
+  "Author": "Custom",
+  "Name": "Happ",
+  "Icon": "static/icon.png",
+  "CodePath": "plugin/index.js",
+  "CodePathWin": "plugin/index.js",
+  "Description": "Кнопки Happ: включить, выключить, переключить, открыть и закрыть окно, выключить маршруты",
+  "Category": "МОИ",
+  "CategoryIcon": "static/icon.png",
+  "Version": "1.0.0",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "3.10.188.226"
+  },
+  "Nodejs": {
+    "Version": "20"
+  }
+}

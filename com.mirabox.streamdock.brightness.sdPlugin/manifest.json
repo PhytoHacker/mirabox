@@ -1,0 +1,49 @@
+{
+  "Actions": [
+    {
+      "Icon": "static/icon.png",
+      "Name": "Яркость",
+      "States": [
+        {
+          "Image": "static/icon.png",
+          "TitleAlignment": "middle",
+          "FontSize": "16",
+          "FontStyle": "Bold",
+          "Title": ""
+        }
+      ],
+      "Settings": {
+        "monitorId": "",
+        "step": 5
+      },
+      "Controllers": ["Knob"],
+      "UserTitleEnabled": false,
+      "SupportedInMultiActions": false,
+      "Tooltip": "Поворот меняет яркость. Нажатие крутилки переключает экран: каждый по очереди, затем все сразу",
+      "UUID": "com.mirabox.streamdock.brightness.monitor",
+      "PropertyInspectorPath": "propertyInspector/brightness/index.html"
+    }
+  ],
+  "SDKVersion": 1,
+  "Author": "Custom",
+  "Name": "Яркость",
+  "Icon": "static/icon.png",
+  "CodePath": "plugin/index.js",
+  "CodePathWin": "plugin/index.js",
+  "Description": "Яркость экрана: внешний монитор, монитор с HDR или экран ноутбука",
+  "Category": "МОИ",
+  "CategoryIcon": "static/icon.png",
+  "Version": "1.0.0",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "3.10.188.226"
+  },
+  "Nodejs": {
+    "Version": "20"
+  }
+}

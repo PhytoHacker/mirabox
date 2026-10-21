@@ -1,0 +1,10 @@
+{
+  "Name": "亮度",
+  "Description": "调节屏幕亮度：外接显示器、HDR 显示器或笔记本屏幕",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.brightness.monitor": {
+    "Name": "亮度",
+    "Tooltip": "转动旋钮调节亮度。按下旋钮可切换屏幕，最后一项会同时调节全部屏幕"
+  },
+  "Localization": {}
+}

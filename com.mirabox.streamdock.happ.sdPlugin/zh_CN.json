@@ -1,0 +1,30 @@
+{
+  "Name": "Happ",
+  "Description": "Happ 按钮：连接、断开、切换、打开和关闭窗口、关闭路由",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.happ.connect": {
+    "Name": "连接",
+    "Tooltip": "连接 Happ 中当前选中的服务器"
+  },
+  "com.mirabox.streamdock.happ.disconnect": {
+    "Name": "断开",
+    "Tooltip": "断开 Happ"
+  },
+  "com.mirabox.streamdock.happ.toggle": {
+    "Name": "切换",
+    "Tooltip": "连接或断开选中的服务器。按键显示隧道是否已开启"
+  },
+  "com.mirabox.streamdock.happ.open": {
+    "Name": "打开窗口",
+    "Tooltip": "打开 Happ 窗口"
+  },
+  "com.mirabox.streamdock.happ.close": {
+    "Name": "关闭窗口",
+    "Tooltip": "隐藏 Happ 窗口"
+  },
+  "com.mirabox.streamdock.happ.routing": {
+    "Name": "关闭路由",
+    "Tooltip": "关闭 Happ 的路由规则"
+  },
+  "Localization": {}
+}

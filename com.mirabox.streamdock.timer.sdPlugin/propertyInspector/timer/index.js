@@ -9,6 +9,7 @@ const soundInput = document.getElementById('soundEnabled');
 const soundName = document.getElementById('soundFileName');
 const themeInput = document.getElementById('theme');
 const accentInput = document.getElementById('accent');
+const stopwatchInput = document.getElementById('stopwatchColor');
 const digitInput = document.getElementById('digitColor');
 const backgroundInput = document.getElementById('background');
 const statusInput = document.getElementById('showStatus');
@@ -40,6 +41,7 @@ function applyForm(settings) {
   soundName.textContent = fileLabel(settings?.soundFile);
   themeInput.value = themes.includes(settings?.theme) ? settings.theme : 'neon';
   accentInput.value = settings?.accent || '#3ddc97';
+  stopwatchInput.value = settings?.stopwatchColor || '#59b7ff';
   digitInput.value = settings?.digitColor || '#f4f7fb';
   backgroundInput.value = settings?.background || '#070b10';
   statusInput.checked = settings?.showStatus !== false;
@@ -79,6 +81,11 @@ themeInput.addEventListener('change', () => {
 accentInput.addEventListener('input', () => {
   if (!$settings) return;
   $settings.accent = accentInput.value;
+});
+
+stopwatchInput.addEventListener('input', () => {
+  if (!$settings) return;
+  $settings.stopwatchColor = stopwatchInput.value;
 });
 
 digitInput.addEventListener('input', () => {

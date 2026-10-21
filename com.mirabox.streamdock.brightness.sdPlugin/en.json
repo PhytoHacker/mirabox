@@ -1,0 +1,10 @@
+{
+  "Name": "Brightness",
+  "Description": "Screen brightness: an external monitor, an HDR monitor, or the laptop panel",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.brightness.monitor": {
+    "Name": "Brightness",
+    "Tooltip": "Rotate to change brightness. Press the knob to switch screens, then control all of them at once"
+  },
+  "Localization": {}
+}

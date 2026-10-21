@@ -11,6 +11,7 @@ function harness() {
     windowMs: 900,
     onToggle: (id) => calls.push(['toggle', id]),
     onReset: (id) => calls.push(['reset', id]),
+    onMode: (id) => calls.push(['mode', id]),
     setTimer: (fn) => {
       const id = nextId++;
       timers.set(id, fn);
@@ -58,14 +59,37 @@ test('three events in the window reset and do not toggle', () => {
   assert.deepEqual(h.calls, [['reset', 'k']]);
 });
 
-test('events after the reset in the same window do nothing', () => {
+test('three clicks wait so a fourth can switch mode', () => {
+  const h = harness();
+  h.gesture.press('k', 1000);
+  h.gesture.press('k', 1200);
+  h.gesture.press('k', 1400);
+  assert.deepEqual(h.calls, []);
+  h.gesture.press('k', 1600);
+  h.fireAll();
+  assert.deepEqual(h.calls, [['mode', 'k']]);
+});
+
+test('a fifth click in the same window does nothing', () => {
   const h = harness();
   h.gesture.press('k', 1000);
   h.gesture.press('k', 1200);
   h.gesture.press('k', 1400);
   h.gesture.press('k', 1600);
+  h.gesture.press('k', 1800);
   h.fireAll();
-  assert.deepEqual(h.calls, [['reset', 'k']]);
+  assert.deepEqual(h.calls, [['mode', 'k']]);
+});
+
+test('a long burst switches mode once, even past the window', () => {
+  const h = harness();
+  let at = 1000;
+  for (let i = 0; i < 12; i += 1) {
+    h.gesture.press('k', at);
+    at += 200;
+  }
+  h.fireAll();
+  assert.deepEqual(h.calls, [['mode', 'k']]);
 });
 
 test('a click after the window toggles on its own', () => {

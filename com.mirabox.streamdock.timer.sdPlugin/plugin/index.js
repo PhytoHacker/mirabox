@@ -1,5 +1,6 @@
-// Таймер крутилки N4 Pro.
-// Щелчок крутилки — старт и пауза, три быстрых щелчка — сброс, поворот — время.
+// Таймер и секундомер на крутилке N4 Pro.
+// Щелчок — старт и пауза, три быстрых щелчка — сброс,
+// четыре — переход между таймером и секундомером, поворот — время таймера.
 
 const { createPlugin, Actions } = require('./connection');
 const alarm = require('./alarm');
@@ -33,19 +34,25 @@ const plugin = createPlugin({
 function render(context) {
   const session = sessions.get(context);
   if (!session) return;
-  const blinkOn = Math.floor(Date.now() / 500) % 2 === 0;
+  const alarming = session.mode !== 'stopwatch' && session.status === STATUS.ALARM;
+  const pulse = alarming
+    ? Math.round(((Math.sin(Date.now() / 190) + 1) / 2) * 10) / 10
+    : 1;
   const title = formatTitle(session, true);
   const [time, label] = title.split('\n');
   const percent = ringPercent(session);
   const style = faceStyle(session);
+  const visualStatus = session.mode === 'stopwatch' ? 'stopwatch' : session.status;
   const ringKey = [
+    session.mode,
     time,
     style.showStatus ? label : '',
-    session.status,
-    session.status === STATUS.ALARM && !blinkOn ? '0' : '1',
-    Math.round(percent * 100),
+    visualStatus,
+    alarming ? String(pulse) : '1',
+    Math.round(percent * 600),
     style.theme,
     style.running,
+    style.stopwatch,
     style.digits,
     style.background,
     style.showStatus ? '1' : '0'
@@ -60,8 +67,8 @@ function render(context) {
       percent,
       time,
       label,
-      status: session.status,
-      blinkOn,
+      status: visualStatus,
+      pulse,
       style
     }));
   }
@@ -102,11 +109,16 @@ function ensurePulse() {
         watched.delete(context);
         continue;
       }
+      if (session.mode === 'stopwatch') {
+        if (session.swStatus === STATUS.RUNNING) dispatch(context, { type: 'tick' });
+        else watched.delete(context);
+        continue;
+      }
       if (session.status === STATUS.RUNNING) dispatch(context, { type: 'tick' });
       else if (session.status === STATUS.ALARM) render(context);
       else watched.delete(context);
     }
-  }, 200);
+  }, 100);
 }
 
 function watch(context) {
@@ -126,7 +138,6 @@ function applyEffects(context, effects) {
     else if (effect === 'alarm-start') {
       watch(context);
       if (session?.soundEnabled) playAlarm(context);
-      plugin.showAlert(context);
     } else if (effect === 'alarm-stop') alarm.stop(context);
     else if (effect === 'persist') persist(context);
     else if (effect === 'persist-soon') persistLater(context);
@@ -143,10 +154,11 @@ function dispatch(context, event) {
 }
 
 const gesture = createGesture({
-  confirmMs: 400,
-  windowMs: 900,
+  confirmMs: 500,
+  windowMs: 1800,
   onToggle: (context) => dispatch(context, { type: 'short' }),
   onReset: (context) => dispatch(context, { type: 'hold' }),
+  onMode: (context) => dispatch(context, { type: 'mode' }),
   setTimer: (fn, ms) => setTimeout(fn, ms),
   clearTimer: (id) => clearTimeout(id)
 });
@@ -161,6 +173,7 @@ plugin.knob = new Actions({
     accent: '#3ddc97',
     digitColor: '#f4f7fb',
     background: '#070b10',
+    stopwatchColor: '#59b7ff',
     showStatus: true
   },
   _willAppear(data) {
@@ -169,8 +182,9 @@ plugin.knob = new Actions({
     if (!sessions.has(context)) {
       const session = restoreSession(settings, Date.now());
       sessions.set(context, session);
-      if (session.status === STATUS.RUNNING || session.status === STATUS.ALARM) watch(context);
-      if (session.status === STATUS.ALARM && session.soundEnabled) playAlarm(context);
+      if (session.mode !== 'stopwatch' && session.status === STATUS.ALARM && session.soundEnabled) {
+        playAlarm(context);
+      }
     } else {
       const session = sessions.get(context);
       sessions.set(context, {
@@ -183,6 +197,11 @@ plugin.knob = new Actions({
     }
     lastTitle.delete(context);
     lastRing.delete(context);
+    const shown = sessions.get(context);
+    const live = shown.mode === 'stopwatch'
+      ? shown.swStatus === STATUS.RUNNING
+      : shown.status === STATUS.RUNNING || shown.status === STATUS.ALARM;
+    if (live) watch(context);
     render(context);
   },
   _didReceiveSettings(data) {
@@ -198,6 +217,7 @@ plugin.knob = new Actions({
     const accent = incoming.accent || session.accent;
     const digitColor = incoming.digitColor || session.digitColor;
     const background = incoming.background || session.background;
+    const stopwatchColor = incoming.stopwatchColor || session.stopwatchColor;
     const showStatus = incoming.showStatus !== false && incoming.showStatus !== 'false';
     sessions.set(context, {
       ...sessions.get(context),
@@ -208,12 +228,13 @@ plugin.knob = new Actions({
       accent,
       digitColor,
       background,
+      stopwatchColor,
       showStatus
     });
     lastRing.delete(context);
     render(context);
-    if (session.status === STATUS.ALARM && !soundEnabled) alarm.stop(context);
-    if (session.status === STATUS.ALARM && soundEnabled && (!session.soundEnabled || fileChanged)) playAlarm(context);
+    if (session.mode !== 'stopwatch' && session.status === STATUS.ALARM && !soundEnabled) alarm.stop(context);
+    if (session.mode !== 'stopwatch' && session.status === STATUS.ALARM && soundEnabled && (!session.soundEnabled || fileChanged)) playAlarm(context);
   },
   dialDown({ context }) {
     gesture.press(context);

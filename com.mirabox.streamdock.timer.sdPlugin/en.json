@@ -1,10 +1,10 @@
 {
   "Name": "Timer",
-  "Description": "Knob timer: click to start or pause, three quick clicks to reset, rotate to set the time",
+  "Description": "Knob timer and stopwatch: click to start or pause, three clicks to reset, four clicks to switch mode",
   "com.mirabox.streamdock.timer.knob": {
     "Name": "Timer",
-    "Tooltip": "Click starts and pauses, three quick clicks reset, rotate sets the time"
+    "Tooltip": "Click starts and pauses, three clicks reset, four clicks switch the stopwatch, rotate sets the time"
   },
-  "Category": "Timer",
+  "Category": "МОИ",
   "Localization": {}
 }

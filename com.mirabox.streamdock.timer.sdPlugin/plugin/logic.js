@@ -1,4 +1,5 @@
 const MAX_SEC = 6 * 60 * 60;
+const MAX_SW_MS = (99 * 3600 + 59 * 60 + 59) * 1000;
 const HOLD_MS = 700;
 const FAST_ROTATE_MS = 70;
 const STEPS = [5, 15, 30, 60, 300];
@@ -20,7 +21,8 @@ const THEMES = Object.freeze({
     idle: '#7aa2d6',
     running: '#3ddc97',
     paused: '#f0ba5a',
-    alarm: '#ff5a6a'
+    alarm: '#ff5a6a',
+    stopwatch: '#59b7ff'
   },
   amber: {
     background: '#120d08',
@@ -31,7 +33,8 @@ const THEMES = Object.freeze({
     idle: '#e2c08a',
     running: '#ffb020',
     paused: '#ffd27a',
-    alarm: '#ff6a3d'
+    alarm: '#ff6a3d',
+    stopwatch: '#ff5ea8'
   },
   ice: {
     background: '#071018',
@@ -42,7 +45,8 @@ const THEMES = Object.freeze({
     idle: '#7ec8e3',
     running: '#4fd2ff',
     paused: '#b9e6ff',
-    alarm: '#ff6b8a'
+    alarm: '#ff6b8a',
+    stopwatch: '#b388ff'
   },
   blood: {
     background: '#100608',
@@ -53,7 +57,8 @@ const THEMES = Object.freeze({
     idle: '#e7a0a6',
     running: '#ff4d5a',
     paused: '#ffb0b6',
-    alarm: '#ff2a2a'
+    alarm: '#ff2a2a',
+    stopwatch: '#ffc14d'
   }
 });
 
@@ -76,6 +81,12 @@ const LABELS = Object.freeze({
   alarm: 'КОНЕЦ'
 });
 
+const SW_LABELS = Object.freeze({
+  idle: 'СЕКУНД',
+  running: 'ИДЕТ',
+  paused: 'СТОП'
+});
+
 function faceStyle(settings = {}) {
   const theme = normalizeTheme(settings.theme);
   const showStatus = showStatusFrom(settings.showStatus);
@@ -92,7 +103,8 @@ function faceStyle(settings = {}) {
     idle: accent,
     running: accent,
     paused: accent,
-    alarm: accent
+    alarm: accent,
+    stopwatch: normalizeColor(settings.stopwatchColor, THEMES.neon.stopwatch)
   };
 }
 
@@ -128,11 +140,20 @@ function formatTime(totalSeconds) {
 }
 
 function ringPercent(session) {
+  if (session?.mode === 'stopwatch') {
+    const ms = Math.max(0, Number(session.swShowMs) || 0);
+    return (ms % 60000) / 60000;
+  }
   if (!session || session.status === STATUS.ALARM || session.durationSec <= 0) return 0;
   return Math.max(0, Math.min(1, displaySeconds(session.remainingMs) / session.durationSec));
 }
 
 function formatTitle(session, blinkOn = true) {
+  if (session.mode === 'stopwatch') {
+    const seconds = Math.floor(Math.max(0, Number(session.swShowMs) || 0) / 1000);
+    const label = SW_LABELS[session.swStatus] || SW_LABELS.idle;
+    return `${formatTime(seconds)}\n${label}`;
+  }
   const seconds = session.status === STATUS.ALARM ? 0 : displaySeconds(session.remainingMs);
   const time = formatTime(seconds);
   if (session.status === STATUS.ALARM && !blinkOn) return `${time}\n....`;
@@ -152,6 +173,32 @@ function soundFileFrom(value) {
   return typeof value === 'string' ? value : '';
 }
 
+function normalizeMode(value) {
+  return value === 'stopwatch' ? 'stopwatch' : 'timer';
+}
+
+function normalizeSwStatus(value) {
+  if (value === STATUS.RUNNING || value === STATUS.PAUSED || value === STATUS.IDLE) return value;
+  return STATUS.IDLE;
+}
+
+function clampSw(ms) {
+  const n = Math.round(Number(ms) || 0);
+  if (n < 0) return 0;
+  if (n > MAX_SW_MS) return MAX_SW_MS;
+  return n;
+}
+
+function stopwatchMs(session, now) {
+  const base = Math.max(0, Number(session.swBaseMs) || 0);
+  const ms = session.swStatus === STATUS.RUNNING && session.swStartedAt > 0
+    ? base + Math.max(0, now - session.swStartedAt)
+    : base;
+  if (ms < 0) return 0;
+  if (ms > MAX_SW_MS) return MAX_SW_MS;
+  return ms;
+}
+
 function createSession(settings = {}) {
   const durationSec = clampDuration(settings.durationSec ?? 300);
   return {
@@ -163,11 +210,17 @@ function createSession(settings = {}) {
     accent: normalizeColor(settings.accent, THEMES.neon.running),
     digitColor: normalizeColor(settings.digitColor, THEMES.neon.digits),
     background: normalizeColor(settings.background, THEMES.neon.background),
+    stopwatchColor: normalizeColor(settings.stopwatchColor, THEMES.neon.stopwatch),
     showStatus: showStatusFrom(settings.showStatus),
+    mode: normalizeMode(settings.mode),
     status: STATUS.IDLE,
     remainingMs: durationSec * 1000,
     endsAt: 0,
-    lastRotateAt: 0
+    lastRotateAt: 0,
+    swStatus: STATUS.IDLE,
+    swBaseMs: 0,
+    swStartedAt: 0,
+    swShowMs: 0
   };
 }
 
@@ -182,32 +235,63 @@ function normalizeSettings(raw) {
     accent: normalizeColor(s.accent, THEMES.neon.running),
     digitColor: normalizeColor(s.digitColor, THEMES.neon.digits),
     background: normalizeColor(s.background, THEMES.neon.background),
+    stopwatchColor: normalizeColor(s.stopwatchColor, THEMES.neon.stopwatch),
     showStatus: showStatusFrom(s.showStatus),
+    mode: normalizeMode(s.mode),
+    swStatus: normalizeSwStatus(s.swStatus),
+    swBaseMs: clampSw(s.swBaseMs),
+    swStartedAt: Number(s.swStartedAt) || 0,
     status: s.status || STATUS.IDLE,
     remainingSec: Math.max(0, Math.round(Number(s.remainingSec) || 0)),
     endsAt: Number(s.endsAt) || 0
   };
 }
 
-function restoreSession(settings, now) {
-  const session = createSession(settings);
-  if (settings.status === STATUS.PAUSED) {
-    const remainingMs = clampDuration(settings.remainingSec) * 1000;
-    return { ...session, status: STATUS.PAUSED, remainingMs };
+function restoreStopwatch(settings, now) {
+  const swStatus = normalizeSwStatus(settings.swStatus);
+  const swBaseMs = clampSw(settings.swBaseMs);
+  const swStartedAt = Number(settings.swStartedAt) || 0;
+  if (swStatus === STATUS.RUNNING && swStartedAt > 0 && swStartedAt <= now) {
+    const swShowMs = Math.min(MAX_SW_MS, swBaseMs + (now - swStartedAt));
+    if (swShowMs >= MAX_SW_MS) {
+      return { swStatus: STATUS.PAUSED, swBaseMs: MAX_SW_MS, swStartedAt: 0, swShowMs: MAX_SW_MS };
+    }
+    return { swStatus: STATUS.RUNNING, swBaseMs, swStartedAt, swShowMs };
   }
-  if (settings.status === STATUS.RUNNING && settings.endsAt > now) {
-    return {
-      ...session,
+  if (swStatus === STATUS.PAUSED || (swStatus === STATUS.RUNNING && swBaseMs > 0)) {
+    return { swStatus: STATUS.PAUSED, swBaseMs, swStartedAt: 0, swShowMs: swBaseMs };
+  }
+  return { swStatus: STATUS.IDLE, swBaseMs: 0, swStartedAt: 0, swShowMs: 0 };
+}
+
+function restoreSession(settings, now) {
+  const base = createSession(settings);
+  let session = base;
+  if (settings.status === STATUS.PAUSED) {
+    session = { ...base, status: STATUS.PAUSED, remainingMs: clampDuration(settings.remainingSec) * 1000 };
+  } else if (settings.status === STATUS.RUNNING && settings.endsAt > now) {
+    session = {
+      ...base,
       status: STATUS.RUNNING,
       endsAt: settings.endsAt,
       remainingMs: settings.endsAt - now
     };
-  }
-  if (
+  } else if (
     (settings.status === STATUS.RUNNING && settings.endsAt > 0 && settings.endsAt <= now) ||
     settings.status === STATUS.ALARM
   ) {
-    return { ...session, status: STATUS.ALARM, remainingMs: 0, endsAt: 0 };
+    session = { ...base, status: STATUS.ALARM, remainingMs: 0, endsAt: 0 };
+  }
+  session = { ...session, ...restoreStopwatch(settings, now) };
+  if (session.mode === 'stopwatch' && session.status === STATUS.ALARM) {
+    session = samePreset(session);
+  } else if (session.mode === 'stopwatch' && session.status === STATUS.RUNNING) {
+    const remainingMs = session.endsAt > now ? session.endsAt - now : Math.max(0, session.remainingMs);
+    session = { ...session, status: STATUS.PAUSED, remainingMs, endsAt: 0 };
+  }
+  if (session.mode !== 'stopwatch' && session.swStatus === STATUS.RUNNING) {
+    const ms = stopwatchMs(session, now);
+    session = { ...session, swStatus: STATUS.PAUSED, swBaseMs: ms, swStartedAt: 0, swShowMs: ms };
   }
   return session;
 }
@@ -222,7 +306,12 @@ function toSettings(session) {
     accent: session.accent,
     digitColor: session.digitColor,
     background: session.background,
+    stopwatchColor: session.stopwatchColor,
     showStatus: session.showStatus !== false,
+    mode: session.mode === 'stopwatch' ? 'stopwatch' : 'timer',
+    swStatus: session.swStatus || STATUS.IDLE,
+    swBaseMs: Math.max(0, Math.round(session.swBaseMs || 0)),
+    swStartedAt: session.swStatus === STATUS.RUNNING ? session.swStartedAt : 0,
     status: session.status,
     remainingSec: Math.max(0, Math.round(session.remainingMs / 1000)),
     endsAt: session.status === STATUS.RUNNING ? session.endsAt : 0
@@ -311,7 +400,102 @@ function onTick(session, now) {
   };
 }
 
+function onStopwatchShort(session, now) {
+  if (session.swStatus === STATUS.RUNNING) {
+    const ms = stopwatchMs(session, now);
+    return {
+      session: { ...session, swStatus: STATUS.PAUSED, swBaseMs: ms, swStartedAt: 0, swShowMs: ms },
+      effects: ['unwatch', 'persist', 'render']
+    };
+  }
+  const base = session.swStatus === STATUS.PAUSED ? session.swBaseMs : 0;
+  return {
+    session: {
+      ...session,
+      swStatus: STATUS.RUNNING,
+      swBaseMs: base,
+      swStartedAt: now,
+      swShowMs: base
+    },
+    effects: ['watch', 'persist', 'render']
+  };
+}
+
+function onStopwatchReset(session) {
+  return {
+    session: { ...session, swStatus: STATUS.IDLE, swBaseMs: 0, swStartedAt: 0, swShowMs: 0 },
+    effects: ['unwatch', 'persist', 'render']
+  };
+}
+
+function onStopwatchTick(session, now) {
+  if (session.swStatus !== STATUS.RUNNING) return { session, effects: [] };
+  const ms = stopwatchMs(session, now);
+  if (ms >= MAX_SW_MS) {
+    return {
+      session: { ...session, swStatus: STATUS.PAUSED, swBaseMs: MAX_SW_MS, swStartedAt: 0, swShowMs: MAX_SW_MS },
+      effects: ['unwatch', 'persist', 'render']
+    };
+  }
+  if (ms === session.swShowMs) return { session, effects: [] };
+  return { session: { ...session, swShowMs: ms }, effects: ['render'] };
+}
+
+function reduceStopwatch(session, event, now) {
+  switch (event.type) {
+    case 'rotate':
+      return { session, effects: [] };
+    case 'short':
+      return onStopwatchShort(session, now);
+    case 'hold':
+      return onStopwatchReset(session);
+    case 'tick':
+      return onStopwatchTick(session, now);
+    default:
+      return { session, effects: [] };
+  }
+}
+
+function onModeSwitch(session, now) {
+  if (session.mode !== 'stopwatch') {
+    let next = session;
+    const effects = [];
+    if (session.status === STATUS.ALARM) {
+      next = samePreset(session);
+      effects.push('alarm-stop');
+    } else if (session.status === STATUS.RUNNING) {
+      next = {
+        ...session,
+        status: STATUS.PAUSED,
+        remainingMs: Math.max(0, session.endsAt - now),
+        endsAt: 0
+      };
+    }
+    next = { ...next, mode: 'stopwatch' };
+    if (next.swStatus === STATUS.RUNNING) {
+      next = { ...next, swShowMs: stopwatchMs(next, now) };
+      effects.push('watch');
+    } else {
+      effects.push('unwatch');
+    }
+    effects.push('persist', 'render');
+    return { session: next, effects };
+  }
+
+  let next = session;
+  if (session.swStatus === STATUS.RUNNING) {
+    const ms = stopwatchMs(session, now);
+    next = { ...session, swStatus: STATUS.PAUSED, swBaseMs: ms, swStartedAt: 0, swShowMs: ms };
+  }
+  return {
+    session: { ...next, mode: 'timer' },
+    effects: ['unwatch', 'persist', 'render']
+  };
+}
+
 function reduce(session, event, now) {
+  if (event.type === 'mode') return onModeSwitch(session, now);
+  if (session.mode === 'stopwatch') return reduceStopwatch(session, event, now);
   switch (event.type) {
     case 'rotate':
       return onRotate(session, event.ticks, now);
@@ -328,6 +512,7 @@ function reduce(session, event, now) {
 
 module.exports = {
   MAX_SEC,
+  MAX_SW_MS,
   HOLD_MS,
   STATUS,
   STEPS,

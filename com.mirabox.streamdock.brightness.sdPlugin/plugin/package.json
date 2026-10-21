@@ -1,0 +1,12 @@
+{
+  "name": "streamdock-brightness",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test level.test.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}

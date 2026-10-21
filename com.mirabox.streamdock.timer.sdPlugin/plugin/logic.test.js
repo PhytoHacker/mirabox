@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   MAX_SEC,
+  MAX_SW_MS,
   STATUS,
   formatTime,
   formatTitle,
@@ -30,11 +31,36 @@ test('themes keep a full ring at the start and sixty percent after forty seconds
     time: '01:00',
     label: 'ИДЕТ',
     status: 'running',
-    blinkOn: true,
+    pulse: 1,
     style: faceStyle({ theme: 'neon' })
   }));
   assert.equal(image.includes('01:00'), true);
   assert.equal(image.includes('ИДЕТ'), true);
+});
+
+test('finished timer draws a full red ring that breathes', () => {
+  const { faceImage } = require('./ring');
+  const style = faceStyle({ theme: 'neon' });
+  const dim = decodeURIComponent(faceImage({
+    percent: 0,
+    time: '00:00',
+    label: 'КОНЕЦ',
+    status: 'alarm',
+    pulse: 0,
+    style
+  }));
+  const bright = decodeURIComponent(faceImage({
+    percent: 0,
+    time: '00:00',
+    label: 'КОНЕЦ',
+    status: 'alarm',
+    pulse: 1,
+    style
+  }));
+  assert.equal(dim.includes('#ff3148'), true);
+  assert.equal(dim.includes('stroke-dashoffset="0.000"'), true);
+  assert.equal(dim.includes('stroke-opacity="0.340"'), true);
+  assert.equal(bright.includes('stroke-opacity="1.000"'), true);
 });
 
 test('formatTime uses minutes under an hour and hours after', () => {
@@ -154,4 +180,120 @@ test('a running timer is restored from its end timestamp', () => {
     now
   );
   assert.equal(expired.status, STATUS.ALARM);
+});
+
+test('four-click mode switch pauses a running timer and comes back to it', () => {
+  const started = reduce(idle(60), { type: 'short' }, 1000).session;
+  const switched = reduce(started, { type: 'mode' }, 5000);
+  assert.equal(switched.session.mode, 'stopwatch');
+  assert.equal(switched.session.status, STATUS.PAUSED);
+  assert.equal(switched.session.remainingMs, 56000);
+  assert.equal(formatTitle(switched.session), '00:00\nСЕКУНД');
+  assert.ok(switched.effects.includes('unwatch'));
+
+  const back = reduce(switched.session, { type: 'mode' }, 8000);
+  assert.equal(back.session.mode, 'timer');
+  assert.equal(back.session.status, STATUS.PAUSED);
+  assert.equal(back.session.remainingMs, 56000);
+});
+
+test('switching away from an alarm silences it and returns the dialed time', () => {
+  const started = reduce(idle(5), { type: 'short' }, 1000).session;
+  const done = reduce(started, { type: 'tick' }, started.endsAt + 5).session;
+  const switched = reduce(done, { type: 'mode' }, started.endsAt + 20);
+  assert.equal(switched.session.mode, 'stopwatch');
+  assert.equal(switched.session.status, STATUS.IDLE);
+  assert.equal(switched.session.remainingMs, 5000);
+  assert.ok(switched.effects.includes('alarm-stop'));
+});
+
+test('stopwatch counts up, the ring tracks the second hand, and a reset clears it', () => {
+  const sw = reduce(idle(0), { type: 'mode' }, 1000).session;
+  const started = reduce(sw, { type: 'short' }, 2000);
+  assert.equal(started.session.swStatus, STATUS.RUNNING);
+  assert.ok(started.effects.includes('watch'));
+
+  const later = reduce(started.session, { type: 'tick' }, 2000 + 30500);
+  assert.equal(formatTitle(later.session), '00:30\nИДЕТ');
+  assert.equal(ringPercent(later.session), 30500 / 60000);
+
+  const minute = reduce(started.session, { type: 'tick' }, 2000 + 60000);
+  assert.equal(formatTitle(minute.session), '01:00\nИДЕТ');
+  assert.equal(ringPercent(minute.session), 0);
+
+  const paused = reduce(later.session, { type: 'short' }, 2000 + 30500);
+  assert.equal(paused.session.swStatus, STATUS.PAUSED);
+  assert.equal(formatTitle(paused.session), '00:30\nСТОП');
+  const frozen = reduce(paused.session, { type: 'tick' }, 90000);
+  assert.equal(frozen.session, paused.session);
+
+  const resumed = reduce(paused.session, { type: 'short' }, 40000);
+  const more = reduce(resumed.session, { type: 'tick' }, 45000);
+  assert.equal(formatTitle(more.session), '00:35\nИДЕТ');
+  assert.equal(ringPercent(more.session), 35500 / 60000);
+
+  const spun = reduce(started.session, { type: 'rotate', ticks: 3 }, 3000);
+  assert.equal(spun.session, started.session);
+
+  const reset = reduce(more.session, { type: 'hold' }, 46000);
+  assert.equal(reset.session.swStatus, STATUS.IDLE);
+  assert.equal(formatTitle(reset.session), '00:00\nСЕКУНД');
+  assert.equal(ringPercent(reset.session), 0);
+});
+
+test('stopwatch color is its own theme color and fills the face', () => {
+  assert.equal(faceStyle({ theme: 'neon' }).stopwatch, '#59b7ff');
+  assert.notEqual(faceStyle({ theme: 'neon' }).stopwatch, faceStyle({ theme: 'neon' }).running);
+  const style = faceStyle({ theme: 'custom', accent: '#112233', stopwatchColor: '#123456' });
+  assert.equal(style.running, '#112233');
+  assert.equal(style.stopwatch, '#123456');
+  assert.equal(faceStyle({ theme: 'custom', stopwatchColor: 'blue' }).stopwatch, '#59b7ff');
+
+  const { faceImage } = require('./ring');
+  const image = decodeURIComponent(faceImage({
+    percent: 0,
+    time: '00:00',
+    label: 'СЕКУНД',
+    status: 'stopwatch',
+    pulse: 1,
+    style
+  }));
+  assert.equal(image.includes('#123456'), true);
+  assert.equal(image.includes('СЕКУНД'), true);
+});
+
+test('a running stopwatch is restored from its start timestamp', () => {
+  const now = 20_000;
+  const session = restoreSession({
+    durationSec: 60,
+    status: STATUS.PAUSED,
+    remainingSec: 40,
+    mode: 'stopwatch',
+    swStatus: STATUS.RUNNING,
+    swBaseMs: 10_000,
+    swStartedAt: 5_000,
+    stopwatchColor: '#123456'
+  }, now);
+  assert.equal(session.mode, 'stopwatch');
+  assert.equal(session.swStatus, STATUS.RUNNING);
+  assert.equal(session.swShowMs, 25_000);
+  assert.equal(session.status, STATUS.PAUSED);
+  assert.equal(session.remainingMs, 40_000);
+  assert.equal(session.stopwatchColor, '#123456');
+  assert.equal(formatTitle(session), '00:25\nИДЕТ');
+  assert.equal(ringPercent(session), 25000 / 60000);
+});
+
+test('the stopwatch stops at ninety-nine hours', () => {
+  const sw = reduce(idle(), { type: 'mode' }, 0).session;
+  const capped = reduce({
+    ...sw,
+    swStatus: STATUS.RUNNING,
+    swBaseMs: MAX_SW_MS - 50,
+    swStartedAt: 1000,
+    swShowMs: MAX_SW_MS - 50
+  }, { type: 'tick' }, 1100);
+  assert.equal(capped.session.swStatus, STATUS.PAUSED);
+  assert.equal(capped.session.swShowMs, MAX_SW_MS);
+  assert.ok(capped.effects.includes('unwatch'));
 });

@@ -1,0 +1,30 @@
+{
+  "Name": "Happ",
+  "Description": "Happ buttons: connect, disconnect, toggle, open and close the window, turn routing off",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.happ.connect": {
+    "Name": "Connect",
+    "Tooltip": "Connects the server currently selected in Happ"
+  },
+  "com.mirabox.streamdock.happ.disconnect": {
+    "Name": "Disconnect",
+    "Tooltip": "Disconnects Happ"
+  },
+  "com.mirabox.streamdock.happ.toggle": {
+    "Name": "Toggle",
+    "Tooltip": "Connects or disconnects the selected server. The key shows whether the tunnel is up"
+  },
+  "com.mirabox.streamdock.happ.open": {
+    "Name": "Open window",
+    "Tooltip": "Opens the Happ window"
+  },
+  "com.mirabox.streamdock.happ.close": {
+    "Name": "Close window",
+    "Tooltip": "Hides the Happ window"
+  },
+  "com.mirabox.streamdock.happ.routing": {
+    "Name": "Routing off",
+    "Tooltip": "Turns off Happ routing rules"
+  },
+  "Localization": {}
+}

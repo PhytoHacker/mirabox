@@ -43,12 +43,13 @@
         "accent": "#3ddc97",
         "digitColor": "#f4f7fb",
         "background": "#070b10",
+        "stopwatchColor": "#59b7ff",
         "showStatus": true
       },
       "Controllers": ["Knob"],
       "UserTitleEnabled": false,
       "SupportedInMultiActions": false,
-      "Tooltip": "Щелчок — старт и пауза, три быстрых щелчка — сброс, поворот — время",
+      "Tooltip": "Щелчок — старт и пауза, три щелчка — сброс, четыре — секундомер, поворот — время",
       "UUID": "com.mirabox.streamdock.timer.knob",
       "PropertyInspectorPath": "propertyInspector/timer/index.html"
     }
@@ -59,10 +60,10 @@
   "Icon": "static/icon.png",
   "CodePath": "plugin/index.js",
   "CodePathWin": "plugin/index.js",
-  "Description": "Таймер на крутилке: щелчок запускает и ставит на паузу, три быстрых щелчка сбрасывают, поворот задаёт время",
-  "Category": "Таймер",
+  "Description": "Таймер и секундомер на крутилке: щелчок запускает и ставит на паузу, три щелчка сбрасывают, четыре переключают режим",
+  "Category": "МОИ",
   "CategoryIcon": "static/icon.png",
-  "Version": "1.0.0",
+  "Version": "1.1.0",
   "OS": [
     {
       "Platform": "windows",
