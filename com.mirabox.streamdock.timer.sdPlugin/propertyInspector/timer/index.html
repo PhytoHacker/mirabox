@@ -15,6 +15,37 @@
       </details>
     </div>
     <div type="select" class="sdpi-item">
+      <div class="sdpi-item-label">Тема</div>
+      <select class="sdpi-item-value" id="theme">
+        <option value="neon">Неон</option>
+        <option value="amber">Янтарь</option>
+        <option value="ice">Лёд</option>
+        <option value="blood">Кровь</option>
+        <option value="custom">Своя</option>
+      </select>
+    </div>
+    <div id="customColors">
+      <div class="sdpi-item">
+        <div class="sdpi-item-label">Дуга</div>
+        <input class="sdpi-item-value" type="color" id="accent" value="#3ddc97">
+      </div>
+      <div class="sdpi-item">
+        <div class="sdpi-item-label">Цифры</div>
+        <input class="sdpi-item-value" type="color" id="digitColor" value="#f4f7fb">
+      </div>
+      <div class="sdpi-item">
+        <div class="sdpi-item-label">Фон</div>
+        <input class="sdpi-item-value" type="color" id="background" value="#070b10">
+      </div>
+    </div>
+    <div type="checkbox" class="sdpi-item">
+      <div class="sdpi-item-label">Статус</div>
+      <div class="sdpi-item-value">
+        <input id="showStatus" type="checkbox">
+        <label for="showStatus" class="sdpi-item-label"><span></span>Показывать подпись</label>
+      </div>
+    </div>
+    <div type="select" class="sdpi-item">
       <div class="sdpi-item-label">Шаг крутилки</div>
       <select class="sdpi-item-value" id="stepSec">
         <option value="5">5 секунд</option>
@@ -30,6 +61,22 @@
         <input id="soundEnabled" type="checkbox">
         <label for="soundEnabled" class="sdpi-item-label"><span></span>Звук по окончании</label>
       </div>
+    </div>
+    <div class="sdpi-item" id="soundFileRow">
+      <div class="sdpi-item-label">Файл</div>
+      <div class="sdpi-item-group file">
+        <input class="sdpi-item-value" type="file" id="soundFile" accept=".wav,.mp3,.wma,.m4a,.aac">
+        <label class="sdpi-file-info" id="soundFileName" for="soundFile">Колокол</label>
+        <label class="sdpi-file-label" for="soundFile">Выбрать...</label>
+      </div>
+    </div>
+    <div class="sdpi-item">
+      <div class="sdpi-item-label"></div>
+      <button class="sdpi-item-value" id="soundDefault" type="button">Колокол по умолчанию</button>
+    </div>
+    <div class="sdpi-item">
+      <div class="sdpi-item-label"></div>
+      <button class="sdpi-item-value" id="soundPreview" type="button">Прослушать</button>
     </div>
   </div>
   <script src="../utils/common.js"></script>

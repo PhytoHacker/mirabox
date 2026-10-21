@@ -4,9 +4,12 @@
 const { createPlugin, Actions } = require('./connection');
 const alarm = require('./alarm');
 const { createGesture } = require('./gesture');
+const { faceImage } = require('./ring');
 const {
   STATUS,
   formatTitle,
+  ringPercent,
+  faceStyle,
   normalizeSettings,
   normalizeStep,
   restoreSession,
@@ -16,17 +19,10 @@ const {
 
 const sessions = new Map();
 const lastTitle = new Map();
-const lastState = new Map();
+const lastRing = new Map();
 const persistSoon = new Map();
 const watched = new Set();
 let pulse = null;
-
-const STATE_INDEX = {
-  [STATUS.IDLE]: 0,
-  [STATUS.RUNNING]: 1,
-  [STATUS.PAUSED]: 2,
-  [STATUS.ALARM]: 3
-};
 
 const plugin = createPlugin({
   onClose() {
@@ -38,15 +34,36 @@ function render(context) {
   const session = sessions.get(context);
   if (!session) return;
   const blinkOn = Math.floor(Date.now() / 500) % 2 === 0;
-  const title = formatTitle(session, session.status === STATUS.ALARM ? blinkOn : true);
-  const state = STATE_INDEX[session.status] ?? 0;
-  if (lastTitle.get(context) !== title) {
-    lastTitle.set(context, title);
-    plugin.setTitle(context, title);
+  const title = formatTitle(session, true);
+  const [time, label] = title.split('\n');
+  const percent = ringPercent(session);
+  const style = faceStyle(session);
+  const ringKey = [
+    time,
+    style.showStatus ? label : '',
+    session.status,
+    session.status === STATUS.ALARM && !blinkOn ? '0' : '1',
+    Math.round(percent * 100),
+    style.theme,
+    style.running,
+    style.digits,
+    style.background,
+    style.showStatus ? '1' : '0'
+  ].join('|');
+  if (lastTitle.get(context) !== '') {
+    lastTitle.set(context, '');
+    plugin.setTitle(context, '');
   }
-  if (lastState.get(context) !== state) {
-    lastState.set(context, state);
-    plugin.setState(context, state);
+  if (lastRing.get(context) !== ringKey) {
+    lastRing.set(context, ringKey);
+    plugin.setImage(context, faceImage({
+      percent,
+      time,
+      label,
+      status: session.status,
+      blinkOn,
+      style
+    }));
   }
 }
 
@@ -55,6 +72,12 @@ function persist(context) {
   if (!session) return;
   clearTimeout(persistSoon.get(context));
   plugin.setSettings(context, toSettings(session));
+}
+
+function playAlarm(context) {
+  const session = sessions.get(context);
+  if (!session?.soundEnabled) return;
+  alarm.start(context, session.soundFile, (error) => plugin.log(`Сигнал: ${error.message || error}`));
 }
 
 function persistLater(context) {
@@ -102,9 +125,7 @@ function applyEffects(context, effects) {
     else if (effect === 'unwatch') unwatch(context);
     else if (effect === 'alarm-start') {
       watch(context);
-      if (session?.soundEnabled) {
-        alarm.start(context, (error) => plugin.log(`Сигнал: ${error.message || error}`));
-      }
+      if (session?.soundEnabled) playAlarm(context);
       plugin.showAlert(context);
     } else if (effect === 'alarm-stop') alarm.stop(context);
     else if (effect === 'persist') persist(context);
@@ -134,7 +155,13 @@ plugin.knob = new Actions({
   default: {
     durationSec: 300,
     stepSec: 60,
-    soundEnabled: true
+    soundEnabled: true,
+    soundFile: '',
+    theme: 'neon',
+    accent: '#3ddc97',
+    digitColor: '#f4f7fb',
+    background: '#070b10',
+    showStatus: true
   },
   _willAppear(data) {
     const context = data.context;
@@ -143,20 +170,19 @@ plugin.knob = new Actions({
       const session = restoreSession(settings, Date.now());
       sessions.set(context, session);
       if (session.status === STATUS.RUNNING || session.status === STATUS.ALARM) watch(context);
-      if (session.status === STATUS.ALARM && session.soundEnabled) {
-        alarm.start(context, (error) => plugin.log(`Сигнал: ${error.message || error}`));
-      }
+      if (session.status === STATUS.ALARM && session.soundEnabled) playAlarm(context);
     } else {
       const session = sessions.get(context);
       sessions.set(context, {
         ...session,
         stepSec: settings.stepSec,
-        soundEnabled: settings.soundEnabled
+        soundEnabled: settings.soundEnabled,
+        soundFile: settings.soundFile
       });
       if (session.status === STATUS.ALARM && !settings.soundEnabled) alarm.stop(context);
     }
     lastTitle.delete(context);
-    lastState.delete(context);
+    lastRing.delete(context);
     render(context);
   },
   _didReceiveSettings(data) {
@@ -166,11 +192,28 @@ plugin.knob = new Actions({
     const incoming = data.payload?.settings || {};
     const stepSec = normalizeStep(incoming.stepSec);
     const soundEnabled = incoming.soundEnabled !== false && incoming.soundEnabled !== 'false';
-    sessions.set(context, { ...sessions.get(context), stepSec, soundEnabled });
+    const soundFile = typeof incoming.soundFile === 'string' ? incoming.soundFile : '';
+    const fileChanged = soundFile !== (session.soundFile || '');
+    const theme = incoming.theme || session.theme || 'neon';
+    const accent = incoming.accent || session.accent;
+    const digitColor = incoming.digitColor || session.digitColor;
+    const background = incoming.background || session.background;
+    const showStatus = incoming.showStatus !== false && incoming.showStatus !== 'false';
+    sessions.set(context, {
+      ...sessions.get(context),
+      stepSec,
+      soundEnabled,
+      soundFile,
+      theme,
+      accent,
+      digitColor,
+      background,
+      showStatus
+    });
+    lastRing.delete(context);
+    render(context);
     if (session.status === STATUS.ALARM && !soundEnabled) alarm.stop(context);
-    if (session.status === STATUS.ALARM && soundEnabled) {
-      alarm.start(context, (error) => plugin.log(`Сигнал: ${error.message || error}`));
-    }
+    if (session.status === STATUS.ALARM && soundEnabled && (!session.soundEnabled || fileChanged)) playAlarm(context);
   },
   dialDown({ context }) {
     gesture.press(context);
@@ -182,6 +225,11 @@ plugin.knob = new Actions({
   keyUp() {},
   touchTap({ context }) {
     gesture.press(context);
+  },
+  sendToPlugin({ context, payload }) {
+    if (payload?.command !== 'previewSound') return;
+    const session = sessions.get(context);
+    alarm.playOnce(session?.soundFile, (error) => plugin.log(`Сигнал: ${error.message || error}`));
   },
   dialRotate({ context, payload }) {
     if (payload?.pressed) return;

@@ -25,6 +25,13 @@ function createPlugin({ onClose } = {}) {
       if (ws.readyState === WebSocket.OPEN) ws.send(raw);
       else pending.push(raw);
     },
+    setImage(context, image) {
+      plugin.send({
+        event: 'setImage',
+        context,
+        payload: { image, target: 0 }
+      });
+    },
     setTitle(context, title) {
       plugin.send({
         event: 'setTitle',

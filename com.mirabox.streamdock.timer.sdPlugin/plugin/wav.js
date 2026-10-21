@@ -1,41 +1,40 @@
-function beep(sampleRate, freq, ms, volume = 0.62) {
-  const count = Math.floor((sampleRate * ms) / 1000);
-  const data = new Int16Array(count);
-  const fade = Math.min(140, Math.floor(count / 5));
-  for (let i = 0; i < count; i++) {
-    let env = 1;
-    if (i < fade) env = i / fade;
-    else if (i > count - fade) env = (count - i) / fade;
-    const sample = Math.sin((2 * Math.PI * freq * i) / sampleRate) * volume * env;
-    data[i] = Math.max(-32767, Math.min(32767, Math.round(sample * 32767)));
-  }
-  return data;
-}
-
-function silence(sampleRate, ms) {
-  return new Int16Array(Math.floor((sampleRate * ms) / 1000));
-}
-
-function buildAlarmWav() {
+function buildBellWav() {
   const sampleRate = 22050;
-  const parts = [
-    beep(sampleRate, 880, 150),
-    silence(sampleRate, 70),
-    beep(sampleRate, 880, 150),
-    silence(sampleRate, 70),
-    beep(sampleRate, 1175, 260),
-    silence(sampleRate, 460)
+  const seconds = 3.2;
+  const count = Math.floor(sampleRate * seconds);
+  const data = new Int16Array(count);
+  const strikes = [
+    { at: 0, freq: 523.25 },
+    { at: 0.72, freq: 392 }
   ];
-  let total = 0;
-  for (const part of parts) total += part.length;
-  const pcm = Buffer.alloc(total * 2);
-  let offset = 0;
-  for (const part of parts) {
-    for (let i = 0; i < part.length; i++) {
-      pcm.writeInt16LE(part[i], offset);
-      offset += 2;
+  const partials = [
+    { ratio: 0.5, amp: 0.28, decay: 1.7 },
+    { ratio: 1, amp: 0.5, decay: 1.25 },
+    { ratio: 1.19, amp: 0.22, decay: 0.85 },
+    { ratio: 1.5, amp: 0.16, decay: 0.65 },
+    { ratio: 2, amp: 0.34, decay: 0.5 },
+    { ratio: 2.55, amp: 0.08, decay: 0.32 },
+    { ratio: 3.01, amp: 0.05, decay: 0.22 }
+  ];
+
+  for (let i = 0; i < count; i++) {
+    const time = i / sampleRate;
+    let sample = 0;
+    for (const strike of strikes) {
+      const local = time - strike.at;
+      if (local < 0) continue;
+      for (const partial of partials) {
+        const env = Math.exp(-local / partial.decay);
+        sample += Math.sin(2 * Math.PI * strike.freq * partial.ratio * local) * partial.amp * env;
+      }
+      sample += Math.sin(2 * Math.PI * strike.freq * 4.2 * local) * Math.exp(-local / 0.03) * 0.2;
     }
+    sample = Math.max(-1, Math.min(1, sample));
+    data[i] = Math.round(sample * 26000);
   }
+
+  const pcm = Buffer.alloc(data.length * 2);
+  for (let i = 0; i < data.length; i++) pcm.writeInt16LE(data[i], i * 2);
 
   const header = Buffer.alloc(44);
   header.write('RIFF', 0);
@@ -54,4 +53,4 @@ function buildAlarmWav() {
   return Buffer.concat([header, pcm]);
 }
 
-module.exports = { buildAlarmWav };
+module.exports = { buildBellWav };

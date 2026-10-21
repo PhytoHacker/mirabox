@@ -5,6 +5,8 @@ const {
   STATUS,
   formatTime,
   formatTitle,
+  ringPercent,
+  faceStyle,
   createSession,
   restoreSession,
   reduce
@@ -13,6 +15,27 @@ const {
 function idle(seconds = 300) {
   return createSession({ durationSec: seconds, stepSec: 60, soundEnabled: true });
 }
+
+test('themes keep a full ring at the start and sixty percent after forty seconds', () => {
+  assert.equal(ringPercent(idle(100)), 1);
+  const started = reduce(idle(100), { type: 'short' }, 1000).session;
+  const later = reduce(started, { type: 'tick' }, 1000 + 40_000).session;
+  assert.equal(ringPercent(later), 0.6);
+  assert.equal(faceStyle({ theme: 'neon' }).running, '#3ddc97');
+  assert.equal(faceStyle({ theme: 'custom', accent: '#112233' }).running, '#112233');
+  assert.equal(faceStyle({ theme: 'nope' }).theme, 'neon');
+  const { faceImage } = require('./ring');
+  const image = decodeURIComponent(faceImage({
+    percent: 0.6,
+    time: '01:00',
+    label: 'ИДЕТ',
+    status: 'running',
+    blinkOn: true,
+    style: faceStyle({ theme: 'neon' })
+  }));
+  assert.equal(image.includes('01:00'), true);
+  assert.equal(image.includes('ИДЕТ'), true);
+});
 
 test('formatTime uses minutes under an hour and hours after', () => {
   assert.equal(formatTime(0), '00:00');

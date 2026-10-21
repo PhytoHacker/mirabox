@@ -10,12 +10,91 @@ const STATUS = Object.freeze({
   ALARM: 'alarm'
 });
 
+const THEMES = Object.freeze({
+  neon: {
+    background: '#070b10',
+    digits: '#f4f7fb',
+    track: '#1c2836',
+    tick: '#3d4d62',
+    tickMajor: '#8ea0b8',
+    idle: '#7aa2d6',
+    running: '#3ddc97',
+    paused: '#f0ba5a',
+    alarm: '#ff5a6a'
+  },
+  amber: {
+    background: '#120d08',
+    digits: '#fff4e0',
+    track: '#3a2a18',
+    tick: '#6a5030',
+    tickMajor: '#e2c08a',
+    idle: '#e2c08a',
+    running: '#ffb020',
+    paused: '#ffd27a',
+    alarm: '#ff6a3d'
+  },
+  ice: {
+    background: '#071018',
+    digits: '#e7f6ff',
+    track: '#163044',
+    tick: '#2d5570',
+    tickMajor: '#9fd4ee',
+    idle: '#7ec8e3',
+    running: '#4fd2ff',
+    paused: '#b9e6ff',
+    alarm: '#ff6b8a'
+  },
+  blood: {
+    background: '#100608',
+    digits: '#ffe8ea',
+    track: '#3a1418',
+    tick: '#6a3036',
+    tickMajor: '#e7a0a6',
+    idle: '#e7a0a6',
+    running: '#ff4d5a',
+    paused: '#ffb0b6',
+    alarm: '#ff2a2a'
+  }
+});
+
+function normalizeTheme(value) {
+  return Object.prototype.hasOwnProperty.call(THEMES, value) || value === 'custom' ? value : 'neon';
+}
+
+function normalizeColor(value, fallback) {
+  return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value) ? value.toLowerCase() : fallback;
+}
+
+function showStatusFrom(value) {
+  return value !== false && value !== 'false';
+}
+
 const LABELS = Object.freeze({
   idle: 'ПУСК',
   running: 'ИДЕТ',
   paused: 'СТОП',
   alarm: 'КОНЕЦ'
 });
+
+function faceStyle(settings = {}) {
+  const theme = normalizeTheme(settings.theme);
+  const showStatus = showStatusFrom(settings.showStatus);
+  if (theme !== 'custom') return { theme, showStatus, ...THEMES[theme] };
+  const accent = normalizeColor(settings.accent, THEMES.neon.running);
+  return {
+    theme,
+    showStatus,
+    background: normalizeColor(settings.background, THEMES.neon.background),
+    digits: normalizeColor(settings.digitColor, THEMES.neon.digits),
+    track: '#243040',
+    tick: '#3d4d62',
+    tickMajor: '#8ea0b8',
+    idle: accent,
+    running: accent,
+    paused: accent,
+    alarm: accent
+  };
+}
 
 function clampDuration(seconds) {
   const n = Math.round(Number(seconds) || 0);
@@ -48,6 +127,11 @@ function formatTime(totalSeconds) {
   return `${pad(m)}:${pad(s)}`;
 }
 
+function ringPercent(session) {
+  if (!session || session.status === STATUS.ALARM || session.durationSec <= 0) return 0;
+  return Math.max(0, Math.min(1, displaySeconds(session.remainingMs) / session.durationSec));
+}
+
 function formatTitle(session, blinkOn = true) {
   const seconds = session.status === STATUS.ALARM ? 0 : displaySeconds(session.remainingMs);
   const time = formatTime(seconds);
@@ -64,12 +148,22 @@ function deltaSeconds(ticks, stepSec, fast) {
   return sign * mag * normalizeStep(stepSec) * mult;
 }
 
+function soundFileFrom(value) {
+  return typeof value === 'string' ? value : '';
+}
+
 function createSession(settings = {}) {
   const durationSec = clampDuration(settings.durationSec ?? 300);
   return {
     durationSec,
     stepSec: normalizeStep(settings.stepSec),
     soundEnabled: soundEnabledFrom(settings.soundEnabled),
+    soundFile: soundFileFrom(settings.soundFile),
+    theme: normalizeTheme(settings.theme),
+    accent: normalizeColor(settings.accent, THEMES.neon.running),
+    digitColor: normalizeColor(settings.digitColor, THEMES.neon.digits),
+    background: normalizeColor(settings.background, THEMES.neon.background),
+    showStatus: showStatusFrom(settings.showStatus),
     status: STATUS.IDLE,
     remainingMs: durationSec * 1000,
     endsAt: 0,
@@ -83,6 +177,12 @@ function normalizeSettings(raw) {
     durationSec: s.durationSec == null ? 300 : clampDuration(s.durationSec),
     stepSec: normalizeStep(s.stepSec),
     soundEnabled: soundEnabledFrom(s.soundEnabled),
+    soundFile: soundFileFrom(s.soundFile),
+    theme: normalizeTheme(s.theme),
+    accent: normalizeColor(s.accent, THEMES.neon.running),
+    digitColor: normalizeColor(s.digitColor, THEMES.neon.digits),
+    background: normalizeColor(s.background, THEMES.neon.background),
+    showStatus: showStatusFrom(s.showStatus),
     status: s.status || STATUS.IDLE,
     remainingSec: Math.max(0, Math.round(Number(s.remainingSec) || 0)),
     endsAt: Number(s.endsAt) || 0
@@ -117,6 +217,12 @@ function toSettings(session) {
     durationSec: session.durationSec,
     stepSec: session.stepSec,
     soundEnabled: session.soundEnabled,
+    soundFile: session.soundFile || '',
+    theme: session.theme || 'neon',
+    accent: session.accent,
+    digitColor: session.digitColor,
+    background: session.background,
+    showStatus: session.showStatus !== false,
     status: session.status,
     remainingSec: Math.max(0, Math.round(session.remainingMs / 1000)),
     endsAt: session.status === STATUS.RUNNING ? session.endsAt : 0
@@ -230,6 +336,8 @@ module.exports = {
   displaySeconds,
   formatTime,
   formatTitle,
+  ringPercent,
+  faceStyle,
   createSession,
   normalizeSettings,
   restoreSession,

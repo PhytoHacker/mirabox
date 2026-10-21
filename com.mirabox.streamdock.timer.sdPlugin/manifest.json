@@ -37,7 +37,13 @@
       "Settings": {
         "durationSec": 300,
         "stepSec": 60,
-        "soundEnabled": true
+        "soundEnabled": true,
+        "soundFile": "",
+        "theme": "neon",
+        "accent": "#3ddc97",
+        "digitColor": "#f4f7fb",
+        "background": "#070b10",
+        "showStatus": true
       },
       "Controllers": ["Knob"],
       "UserTitleEnabled": false,
