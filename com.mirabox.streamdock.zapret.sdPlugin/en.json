@@ -1,0 +1,10 @@
+{
+  "Name": "Zapret",
+  "Description": "Turns zapret on and off: installs the service for the chosen config, then unloads the process",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.zapret.toggle": {
+    "Name": "Toggle",
+    "Tooltip": "Press to install the zapret service. Press again to unload the process"
+  },
+  "Localization": {}
+}

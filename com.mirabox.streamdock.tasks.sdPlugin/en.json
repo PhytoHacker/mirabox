@@ -1,0 +1,10 @@
+{
+  "Name": "Tasks",
+  "Description": "Shows how many open Google Tasks are waiting",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.tasks.count": {
+    "Name": "Tasks",
+    "Tooltip": "Open Google Tasks count. Press to open the list"
+  },
+  "Localization": {}
+}

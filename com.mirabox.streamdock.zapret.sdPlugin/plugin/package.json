@@ -1,0 +1,12 @@
+{
+  "name": "streamdock-zapret",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test *.test.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Запрет</title>
+  <style>
+    html, body {
+      margin: 0;
+      background: #2d2d2d;
+      color: #d8d8d8;
+      font: 13px/1.45 "Segoe UI", sans-serif;
+    }
+    .wrap { padding: 14px 16px 18px; }
+    h1 { margin: 0 0 8px; font-size: 15px; font-weight: 650; }
+    p { margin: 0 0 8px; color: #bdbdbd; }
+    strong { color: #f4f7fb; font-weight: 650; }
+    label {
+      display: block;
+      margin: 12px 0 4px;
+      color: #d8d8d8;
+    }
+    input[type="text"] {
+      box-sizing: border-box;
+      width: 100%;
+      height: 32px;
+      padding: 0 8px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background: #3d3d3d;
+      color: #f4f7fb;
+      font: 13px/1.45 "Segoe UI", sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Запрет</h1>
+    <p>Нажатие ставит службу с этим конфигом. Повторное снимает службу и выгружает процесс. Windows спросит права администратора.</p>
+    <p>Сейчас: <strong id="status">—</strong></p>
+    <label for="root">Папка zapret</label>
+    <input id="root" type="text" spellcheck="false">
+    <label for="strategy">Конфиг</label>
+    <input id="strategy" type="text" spellcheck="false">
+  </div>
+  <script src="index.js"></script>
+</body>
+</html>

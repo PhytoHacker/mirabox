@@ -1,0 +1,10 @@
+{
+  "Name": "Zapret",
+  "Description": "开关 zapret：按所选配置安装服务，再按一次卸载进程",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.zapret.toggle": {
+    "Name": "切换",
+    "Tooltip": "按下安装 zapret 服务，再按一次卸载进程"
+  },
+  "Localization": {}
+}

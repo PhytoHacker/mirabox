@@ -1,0 +1,10 @@
+{
+  "Name": "任务",
+  "Description": "在按键上显示未完成的 Google 任务数量",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.tasks.count": {
+    "Name": "任务",
+    "Tooltip": "未完成的 Google 任务数量。按下打开列表"
+  },
+  "Localization": {}
+}

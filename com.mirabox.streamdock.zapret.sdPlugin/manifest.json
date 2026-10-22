@@ -1,0 +1,57 @@
+{
+  "Actions": [
+    {
+      "Icon": "static/icon.png",
+      "Name": "Переключить",
+      "DisableAutomaticStates": true,
+      "States": [
+        {
+          "Image": "static/off.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "16",
+          "FontStyle": "Bold",
+          "Title": "ВЫКЛ"
+        },
+        {
+          "Image": "static/on.png",
+          "TitleAlignment": "bottom",
+          "FontSize": "16",
+          "FontStyle": "Bold",
+          "Title": "ВКЛ"
+        }
+      ],
+      "Settings": {
+        "root": "C:\\Users\\User\\Desktop\\zapr",
+        "strategy": "general (ALT11).bat"
+      },
+      "Controllers": ["Keypad", "Knob"],
+      "UserTitleEnabled": false,
+      "SupportedInMultiActions": false,
+      "Tooltip": "Первое нажатие ставит службу zapret, повторное выгружает процесс",
+      "UUID": "com.mirabox.streamdock.zapret.toggle",
+      "PropertyInspectorPath": "propertyInspector/zapret/index.html"
+    }
+  ],
+  "SDKVersion": 1,
+  "Author": "Custom",
+  "Name": "Запрет",
+  "Icon": "static/icon.png",
+  "CodePath": "plugin/index.js",
+  "CodePathWin": "plugin/index.js",
+  "Description": "Включает и выключает zapret: служба с выбранным конфигом и выгрузка процесса",
+  "Category": "МОИ",
+  "CategoryIcon": "static/icon.png",
+  "Version": "1.0.0",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "3.10.188.226"
+  },
+  "Nodejs": {
+    "Version": "20"
+  }
+}

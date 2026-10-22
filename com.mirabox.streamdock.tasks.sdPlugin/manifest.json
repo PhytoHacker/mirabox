@@ -1,0 +1,53 @@
+{
+  "Actions": [
+    {
+      "Icon": "static/icon.png",
+      "Name": "Задачи",
+      "States": [
+        {
+          "Image": "static/badge.png",
+          "TitleAlignment": "middle",
+          "FontSize": "28",
+          "FontStyle": "Bold",
+          "TitleColor": "#ffffff",
+          "Title": ""
+        }
+      ],
+      "Settings": {
+        "clientId": "",
+        "clientSecret": "",
+        "listId": "",
+        "interval": 60,
+        "showName": false
+      },
+      "Controllers": ["Keypad", "Knob"],
+      "UserTitleEnabled": false,
+      "SupportedInMultiActions": false,
+      "Tooltip": "Число открытых задач Google. Нажатие открывает список",
+      "UUID": "com.mirabox.streamdock.tasks.count",
+      "PropertyInspectorPath": "propertyInspector/tasks/index.html"
+    }
+  ],
+  "SDKVersion": 1,
+  "Author": "Custom",
+  "Name": "Задачи",
+  "Icon": "static/icon.png",
+  "CodePath": "plugin/index.js",
+  "CodePathWin": "plugin/index.js",
+  "Description": "Показывает на клавише, сколько открытых задач лежит в Google Tasks",
+  "Category": "МОИ",
+  "CategoryIcon": "static/icon.png",
+  "Version": "1.0.0",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "3.10.188.226"
+  },
+  "Nodejs": {
+    "Version": "20"
+  }
+}

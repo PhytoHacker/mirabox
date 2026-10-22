@@ -1,0 +1,10 @@
+{
+  "Name": "Запрет",
+  "Description": "Включает и выключает zapret: служба с выбранным конфигом и выгрузка процесса",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.zapret.toggle": {
+    "Name": "Переключить",
+    "Tooltip": "Первое нажатие ставит службу zapret, повторное выгружает процесс"
+  },
+  "Localization": {}
+}

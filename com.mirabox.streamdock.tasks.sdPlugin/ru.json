@@ -1,0 +1,10 @@
+{
+  "Name": "Задачи",
+  "Description": "Показывает на клавише, сколько открытых задач лежит в Google Tasks",
+  "Category": "МОИ",
+  "com.mirabox.streamdock.tasks.count": {
+    "Name": "Задачи",
+    "Tooltip": "Число открытых задач Google. Нажатие открывает список"
+  },
+  "Localization": {}
+}
